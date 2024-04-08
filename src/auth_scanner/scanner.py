@@ -4,25 +4,39 @@ import requests
 def check_authentication(url, access):
     """
     Check if the given URL requires authentication.
-    Returns True if authentication is likely missing, False otherwise.
     """
     try:
         response = requests.get(url, allow_redirects=True)
         if response.status_code == 200:
             if access == "protected":
-                print(
-                    f"ERROR, Security Issue: {url} is protected but was accessed without authentication."
-                )
-                return True
+                return {
+                    "url": url,
+                    "access": access,
+                    "status": "ERROR",
+                    "status_code": response.status_code,
+                    "message": "Protected but was accessed without authentication.",
+                }
             elif access == "public":
-                print(f"SUCCESS: {url} is public and accessible as expected.")
-                return False
+                return {
+                    "url": url,
+                    "access": access,
+                    "status": "SUCCESS",
+                    "status_code": response.status_code,
+                    "message": "Public and accessible as expected.",
+                }
         else:
-            print(
-                f"ERROR, Authentication required or error: {url} (Status: {response.status_code})"
-            )
-            return True
+            return {
+                "url": url,
+                "access": access,
+                "status": "ERROR",
+                "status_code": response.status_code,
+                "message": f"Authentication required or error.",
+            }
 
     except requests.RequestException as e:
-        print(f"Error accessing {url}: {e}")
-        return False
+        return {
+            "url": url,
+            "access": access,
+            "status": "ERROR",
+            "message": f"Error accessing {url}: {e}",
+        }
