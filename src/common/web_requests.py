@@ -1,1 +1,0 @@
-# Common web request functionalities
