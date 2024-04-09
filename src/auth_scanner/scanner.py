@@ -98,3 +98,32 @@ def check_for_data_leakage(url):
             "status": "ERROR",
             "message": str(e),
         }
+
+
+def test_file_upload(url, filepath, form_field_name="file"):
+    """
+    Attempts to upload a file to the given URL.
+
+    :param url: The URL where the file should be uploaded.
+    :param filepath: The path to the file to be uploaded.
+    :param form_field_name: The name of the form field used for the file upload.
+    """
+    files = {form_field_name: open(filepath, "rb")}
+    try:
+        response = requests.post(url, files=files)
+        if response.status_code == 200:
+            return {
+                "url": url,
+                "status_code": response.status_code,
+                "message": f"'{filepath}' was successfully uploaded.",
+            }
+        else:
+            return {
+                "url": url,
+                "status_code": response.status_code,
+                "message": f"'{filepath}' could not be uploaded.",
+            }
+    except Exception as e:
+        print(f"Error during file upload: {e}")
+    finally:
+        files[form_field_name].close()

@@ -37,6 +37,16 @@ def main():
     save_results("test6_results", test6_results)
     print("---------- TEST 6 COMPLETE ----------\n")
 
+    test7_results = []
+    print("---------- TEST 7: Starting uncontrolled resources check... ----------\n")
+    test_file_path = "data/test.sh"
+    for url, _ in urls:
+        test7_result = test_file_upload(url, test_file_path)
+        test7_results.append(test7_result)
+        print(f'Status {test7_result["status_code"]}: {test7_result["url"]}\n{test7_result["message"]}\n')
+    save_results("test7_results", test7_results)
+    print("---------- TEST 7 COMPLETE ----------\n")
+
 
 if __name__ == "__main__":
     main()
