@@ -28,7 +28,7 @@ def main():
     print("---------- TEST 3 COMPLETE ----------\n")
 
     test6_results = []
-    print("---------- TEST 6: Starting scan for data leaks... ----------\n")
+    print("---------- TEST 6: Starting scan for sensitive data... ----------\n")
     for url, _ in urls:
         test6_result = check_for_data_leakage(url)
         test6_results.append(test6_result)
