@@ -47,6 +47,27 @@ def main():
     save_results("test7_results", test7_results)
     print("---------- TEST 7 COMPLETE ----------\n")
 
+    test8_results = []
+    print("---------- TEST 8: Starting scan for insufficient auditing... ----------")
+    log_file = 'data/mock_log_file.log'
+    search_categories = {
+        'Authentication': ['login', 'logout'],
+        'Authorization': ['access', 'unauthorized', 'authorized'],
+        'Data Access': ['data', 'file', 'upload', 'insert', 'delete']
+    }
+
+    for category, terms in search_categories.items():
+        test8_results = analyze_logs(log_file, terms)
+
+        if test8_results:
+            print(f"\nFound the following entries related to {category}:")
+            for result in test8_results:
+                print(result, end='')
+        else:
+            print("WARNING: No relevant log entries found for this category.")
+    save_results("test8_results", test8_results)
+    print("---------- TEST 8 COMPLETE ----------\n")
+
 
 if __name__ == "__main__":
     main()

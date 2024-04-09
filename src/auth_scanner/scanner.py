@@ -127,3 +127,20 @@ def test_file_upload(url, filepath, form_field_name="file"):
         print(f"Error during file upload: {e}")
     finally:
         files[form_field_name].close()
+
+
+def analyze_logs(log_file_path, search_terms):
+    """
+    Analyze log files for specified search terms and return matches.
+
+    :param log_file_path: Path to the log file.
+    :param search_terms: A list of terms to search for in the log entries.
+    :return: List of matching log entries.
+    """
+    matches = []
+    with open(log_file_path, "r") as file:
+        for line in file:
+            if any(term in line.lower() for term in search_terms):
+                matches.append(line)
+
+    return matches
