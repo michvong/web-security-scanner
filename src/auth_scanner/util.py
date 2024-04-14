@@ -9,22 +9,21 @@ def process_urls(urls):
             print(f"Invalid URL format: {url}\n")
             continue
 
-        if access != "public" and access != "protected":
+        if access not in (True, False):
             print(f"Invalid access format: {access}\n")
             continue
 
 
 def load_urls_from_file(file_path):
     """
-    Load URLs and their expected access control from a file.
+    Load URLs and their protection status from a file, returning a list of tuples.
     """
     with open(file_path, "r") as file:
-        urls = [
-            (line.strip().split(",")[0], line.strip().split(",")[1])
+        return [
+            (line.strip().split(",")[0], line.strip().split(",")[1] == "True")
             for line in file
             if line.strip()
         ]
-    return urls
 
 
 def save_results(test_type, results):

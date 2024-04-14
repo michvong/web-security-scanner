@@ -2,42 +2,51 @@ import requests
 from urllib.parse import urlparse
 
 
-def check_authentication(url, access):
+def check_authentication(url, is_protected):
     """
-    Check if the given URL requires authentication.
+    Checks if a given endpoint requires authentication based on the expected protection level.
+
+    :param url: URL to be checked.
+    :param is_protected: Boolean indicating if the endpoint is expected to be protected.
     """
     try:
         response = requests.get(url, allow_redirects=True)
-        if response.status_code == 200:
-            if access == "protected":
-                return {
-                    "url": url,
-                    "access": access,
-                    "status": "ERROR",
-                    "status_code": response.status_code,
-                    "message": "Protected but was accessed without authentication.",
-                }
-            elif access == "public":
-                return {
-                    "url": url,
-                    "access": access,
-                    "status": "SUCCESS",
-                    "status_code": response.status_code,
-                    "message": "Public and accessible as expected.",
-                }
+        if response.status_code == 200 and is_protected:
+            return {
+                "url": url,
+                "access": "protected",
+                "status": "ERROR",
+                "status_code": response.status_code,
+                "message": "Protected but was accessed without authentication.",
+            }
+        elif response.status_code == 200 and not is_protected:
+            return {
+                "url": url,
+                "access": "public",
+                "status": "SUCCESS",
+                "status_code": response.status_code,
+                "message": "Public and accessible as expected.",
+            }
+        elif response.status_code != 200 and is_protected:
+            return {
+                "url": url,
+                "access": "protected",
+                "status": "SUCCESS",
+                "status_code": response.status_code,
+                "message": "Authentication correctly required.",
+            }
         else:
             return {
                 "url": url,
-                "access": access,
+                "access": "public",
                 "status": "ERROR",
                 "status_code": response.status_code,
-                "message": f"Authentication required or error.",
+                "message": "Public endpoint not accessible.",
             }
-
     except requests.RequestException as e:
         return {
             "url": url,
-            "access": access,
+            "access": "unknown",
             "status": "ERROR",
             "message": f"Error accessing {url}: {e}",
         }
@@ -144,3 +153,39 @@ def analyze_logs(log_file_path, search_terms):
                 matches.append(line)
 
     return matches
+
+
+def check_session_management(base_url):
+    login_url = f"{base_url}/rest/user/login"
+    logout_url = f"{base_url}/rest/user/logout"
+
+    user_details = {"email": "admin@juice-sh.op", "password": "admin123"}
+
+    with requests.Session() as session:
+        response = session.post(login_url, json=user_details)
+
+        if response.status_code == 200:
+            print("Login successful.")
+            cookies = session.cookies
+            for cookie in cookies:
+                print(f"Cookie {cookie.name} attributes:")
+                attributes = []
+                if "Secure" in cookie._rest:
+                    attributes.append("Secure")
+                if "HttpOnly" in cookie._rest:
+                    attributes.append("HttpOnly")
+                print(", ".join(attributes) or "No Secure/HttpOnly attributes set")
+
+        else:
+            print("Failed to login.")
+
+        response = session.get(logout_url)
+        if response.status_code == 200:
+            print("Logout successful.")
+
+        # Try to access a protected resource after logging out
+        response = session.get(f"{base_url}/api/ProtectedResource")
+        if response.status_code == 401:
+            print("Session properly invalidated after logout.")
+        else:
+            print("Session may not be properly invalidated after logout.")
