@@ -1,0 +1,5 @@
+https://mv-juice-shop-4e9a0f3a9844.herokuapp.com/#,False
+http://localhost:3000/#,False
+http://localhost:3000/#/api/Products,False
+http://localhost:3000/#/api/BasketItems,True
+http://localhost:3000/#/administration,True

@@ -1,4 +1,7 @@
+from src.auth_scanner.authentication import *
+
 import requests
+import json
 from urllib.parse import urlparse
 
 
@@ -50,6 +53,71 @@ def check_authentication(url, is_protected):
             "status": "ERROR",
             "message": f"Error accessing {url}: {e}",
         }
+
+
+def test_rate_limiting(base_url, email, password):
+    """
+    Test for rate limiting by trying to login multiple times.
+    """
+    login_credentials = {"email": email, "password": password}
+    login_payload = json.dumps(login_credentials)
+    for i in range(10):
+        try:
+            authenticated_session, response = login(base_url, login_payload)
+            print(f"Attempt {i+1}, Status: {response.status_code}")
+        except RuntimeError as e:
+            print(f"Attempt {i+1}, Login failed: {e}")
+            if "429" in str(e):
+                print("Rate limiting detected.")
+                return
+    print("Rate limiting not detected.\n")
+
+
+def test_weak_password_support(base_url):
+    """
+    Test password strength enforcement by attempting to register users with various password complexities.
+    """
+    # Test cases for various password strengths
+    passwords = [
+        "123",  # Too short, no digit, symbol, uppercase, or lowercase
+        "12345",  # Minimum length, no digit, symbol, uppercase, or lowercase
+        "abcdefgh",  # No digit, symbol, or uppercase
+        "ABCD1234",  # No lowercase or symbol
+        "abcd1234",  # No uppercase or symbol
+        "abcdABCD",  # No digit or symbol
+        "!abcdAB1",  # Strong: has digit, symbol, uppercase, and lowercase
+    ]
+
+    results = {}
+    for password in passwords:
+        email = f"test-{password}@example.com"  # Unique email for each test case
+        try:
+            create_user(base_url, email, password)
+            results[password] = "Weak password accepted, weak authentication detected."
+        except RuntimeError as e:
+            results[password] = (
+                f"Weak password rejected, strong authentication measures in place. {str(e)}"
+            )
+
+    for password, result in results.items():
+        print(f"Password: {password} -> {result}")
+
+
+def attempt_unauthorized_access(base_url, session, restricted_url):
+    """
+    Tries to access a restricted URL with the session of a user who should not have access.
+    """
+    proxies = {
+        "http": "http://127.0.0.1:8080",
+        "https": "http://127.0.0.1:8080",
+    }
+    response = session.get(restricted_url, proxies=proxies)
+    if response.status_code == 200:
+        print(f"Unauthorized access granted to {restricted_url}")
+    else:
+        print(
+            f"Access correctly restricted to {restricted_url}, status code: {response.status_code}"
+        )
 
 
 def check_https(url):
@@ -111,31 +179,48 @@ def check_for_data_leakage(url):
 
 def test_file_upload(url, filepath, form_field_name="file"):
     """
-    Attempts to upload a file to the given URL.
+    Attempts to upload a file to the given URL using an authenticated session.
 
-    :param url: The URL where the file should be uploaded.
+    :param url: The base URL where the file should be uploaded.
     :param filepath: The path to the file to be uploaded.
     :param form_field_name: The name of the form field used for the file upload.
     """
-    files = {form_field_name: open(filepath, "rb")}
+    session = requests.Session()
+    jsurl = f"{url}/rest/user/login"
+    file_upload_url = f"{url}/file-upload"
+
+    auth_payload = json.dumps({"email": "admin@juice-sh.op", "password": "whocares"})
+
+    login_response = session.post(
+        jsurl, headers={"Content-Type": "application/json"}, data=auth_payload
+    )
+    if not login_response.ok:
+        return {
+            "url": url,
+            "status_code": login_response.status_code,
+            "message": "Failed to log in. Check credentials and URL.",
+        }
+
     try:
-        response = requests.post(url, files=files)
-        if response.status_code == 200:
-            return {
-                "url": url,
-                "status_code": response.status_code,
-                "message": f"'{filepath}' was successfully uploaded.",
+        with open(filepath, "rb") as infile:
+            files = {
+                form_field_name: ("filename.ext", infile, "application/octet-stream")
             }
-        else:
-            return {
-                "url": url,
-                "status_code": response.status_code,
-                "message": f"'{filepath}' could not be uploaded.",
-            }
+            upload_response = session.post(file_upload_url, files=files)
+            if upload_response.ok:
+                return {
+                    "url": file_upload_url,
+                    "status_code": upload_response.status_code,
+                    "message": f"File '{filepath}' was successfully uploaded.",
+                }
+            else:
+                return {
+                    "url": file_upload_url,
+                    "status_code": upload_response.status_code,
+                    "message": f"Failed to upload '{filepath}'. Server responded with status code: {upload_response.status_code}",
+                }
     except Exception as e:
-        print(f"Error during file upload: {e}")
-    finally:
-        files[form_field_name].close()
+        return {"url": file_upload_url, "message": f"Error during file upload: {e}"}
 
 
 def analyze_logs(log_file_path, search_terms):
@@ -155,9 +240,9 @@ def analyze_logs(log_file_path, search_terms):
     return matches
 
 
-def check_session_management(base_url):
-    login_url = f"{base_url}/rest/user/login"
-    logout_url = f"{base_url}/rest/user/logout"
+def check_session_management(url):
+    login_url = f"{url}/rest/user/login"
+    logout_url = f"{url}/rest/user/logout"
 
     user_details = {"email": "admin@juice-sh.op", "password": "admin123"}
 
@@ -184,7 +269,7 @@ def check_session_management(base_url):
             print("Logout successful.")
 
         # Try to access a protected resource after logging out
-        response = session.get(f"{base_url}/api/ProtectedResource")
+        response = session.get(f"{url}/api/ProtectedResource")
         if response.status_code == 401:
             print("Session properly invalidated after logout.")
         else:
