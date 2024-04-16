@@ -1,5 +1,4 @@
 from src.util.authentication import *
-from src.util.web_requests import *
 
 import requests
 import json
