@@ -1,58 +1,47 @@
-from src.auth_scanner.authentication import *
+from src.util.authentication import *
+from src.util.web_requests import *
 
 import requests
 import json
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+load_dotenv()
+
+proxies = {
+    "http": os.getenv("HTTP_PROXY"),
+    "https": os.getenv("HTTPS_PROXY"),
+}
 
 
-def check_authentication(url, is_protected):
+def test_endpoint_with_session(server, endpoint, session):
     """
-    Checks if a given endpoint requires authentication based on the expected protection level.
-
-    :param url: URL to be checked.
-    :param is_protected: Boolean indicating if the endpoint is expected to be protected.
+    Test the specified endpoint with a given session.
     """
-    try:
-        response = requests.get(url, allow_redirects=True)
-        if response.status_code == 200 and is_protected:
-            return {
-                "url": url,
-                "access": "protected",
-                "status": "ERROR",
-                "status_code": response.status_code,
-                "message": "Protected but was accessed without authentication.",
-            }
-        elif response.status_code == 200 and not is_protected:
-            return {
-                "url": url,
-                "access": "public",
-                "status": "SUCCESS",
-                "status_code": response.status_code,
-                "message": "Public and accessible as expected.",
-            }
-        elif response.status_code != 200 and is_protected:
-            return {
-                "url": url,
-                "access": "protected",
-                "status": "SUCCESS",
-                "status_code": response.status_code,
-                "message": "Authentication correctly required.",
-            }
-        else:
-            return {
-                "url": url,
-                "access": "public",
-                "status": "ERROR",
-                "status_code": response.status_code,
-                "message": "Public endpoint not accessible.",
-            }
-    except requests.RequestException as e:
-        return {
-            "url": url,
-            "access": "unknown",
-            "status": "ERROR",
-            "message": f"Error accessing {url}: {e}",
-        }
+    response = session.get(
+        f"{server}{endpoint}",
+    )
+    if response.status_code == 200:
+        print(
+            f"Access to {endpoint} successful with session: Status code {response.status_code}"
+        )
+    else:
+        print(
+            f"Access to {endpoint} failed with session: Status code {response.status_code}"
+        )
+
+
+def test_endpoint_without_auth(server, endpoint):
+    """
+    Test endpoint without any authentication.
+    """
+    response = requests.get(f"{server}{endpoint}")
+    if response.status_code == 200:
+        print(f"Security Issue: {endpoint} is accessible without authentication.")
+    else:
+        print(
+            f"No access without authentication to {endpoint}: Status Code {response.status_code}"
+        )
 
 
 def test_rate_limiting(base_url, email, password):

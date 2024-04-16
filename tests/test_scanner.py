@@ -8,16 +8,44 @@ load_dotenv()
 
 
 def missing_authentication_test(urls):
-    test1_results = []
-    print("---------- TEST 1: Starting scan for missing authentication... ----------\n")
-    for url, access in urls:
-        test1_result = check_authentication(url, access)
-        test1_results.append(test1_result)
-        print(
-            f'{test1_result["status"]} (Status: {test1_result["status_code"]}): {test1_result["url"]}\n{test1_result["message"]}\n'
-        )
-    save_results("test1_results", test1_results)
-    print("---------- TEST 1 COMPLETE ----------\n")
+    print("---------- TEST 1: Starting scan for missing authentication... ----------")
+    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    try:
+        admin_session, _ = login(os.getenv("HOST"), admin_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as admin: {e}")
+        return
+
+    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    try:
+        user_session, _ = login(os.getenv("HOST"), user_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
+
+    endpoints = [
+        "/rest/user/whoami",  # Requires authentication: Ensures only logged-in users can access user identity info.
+        "/api/Users",  # Admin-only access: Prevents non-admin users from listing user accounts.
+        "/rest/basket/1",  # Restricted access: Only accessible by the basket's owner or by an admin.
+        "/rest/basket/2",  # Restricted access: Only accessible by the basket's owner or by an admin.
+        "/api/BasketItems/1",  # Item-specific access: Requires user authentication, owner or admin rights for access.
+        "/api/BasketItems/2",  # Item-specific access: Requires user authentication, owner or admin rights for access.
+        "/api/PrivacyRequests",  # Privacy requests handling: Should be secured to process data privacy requests.
+        "/#/administration",  # Admin panel: Strictly protected to allow only administrators.
+    ]
+
+    print("\n- Testing admin privileges... -")
+    for endpoint in endpoints:
+        test_endpoint_with_session(os.getenv("HOST"), endpoint, admin_session)
+
+    print("\n- Testing user privileges... -")
+    for endpoint in endpoints:
+        test_endpoint_with_session(os.getenv("HOST"), endpoint, user_session)
+
+    print("\n- Testing non-authorized session privileges... -")
+    for endpoint in endpoints:
+        test_endpoint_without_auth(os.getenv("HOST"), endpoint)
+    print("\n---------- TEST 1 COMPLETE ----------\n")
 
 
 def weak_authentication_test():

@@ -1,7 +1,6 @@
 from src.auth_scanner.scanner import *
 from src.auth_scanner.util import *
 from tests.test_scanner import *
-from src.auth_scanner.authentication import *
 
 
 def main():
