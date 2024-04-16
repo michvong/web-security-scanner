@@ -3,11 +3,6 @@ from src.auth_scanner.util import *
 from tests.test_scanner import *
 from src.auth_scanner.authentication import *
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 def main():
     urls_file = "data/urls.txt"
@@ -16,7 +11,7 @@ def main():
     process_urls(urls)
 
     missing_authentication_test(urls)
-    weak_authentication_test()
+    # weak_authentication_test()
     # weak_encryption_test(urls)
     # missing_authorization_test("http://localhost:3000/#")
     # weak_authorization_test()
