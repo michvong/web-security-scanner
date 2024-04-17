@@ -91,23 +91,6 @@ def test_weak_password_support(base_url):
         print(f"Password: {password} -> {result}")
 
 
-def attempt_unauthorized_access(base_url, session, restricted_url):
-    """
-    Tries to access a restricted URL with the session of a user who should not have access.
-    """
-    proxies = {
-        "http": "http://127.0.0.1:8080",
-        "https": "http://127.0.0.1:8080",
-    }
-    response = session.get(restricted_url, proxies=proxies)
-    if response.status_code == 200:
-        print(f"Unauthorized access granted to {restricted_url}")
-    else:
-        print(
-            f"Access correctly restricted to {restricted_url}, status code: {response.status_code}"
-        )
-
-
 def check_https(url):
     parsed_url = urlparse(url)
     if parsed_url.scheme == "https":
@@ -117,6 +100,32 @@ def check_https(url):
         )
     else:
         print(url + ": HTTPS protocol is not used, data is NOT safe.\n")
+
+
+def _get_basket_url(server):
+    return "{}/rest/basket".format(server)
+
+
+def access_another_user_basket(server, session):
+    """
+    If we're admin(ID 1), open basket 2. Anybody else, open the ID below us.
+    :param server: juice shop URL
+    :param session: Session
+    """
+    current_user_id = get_current_user_id(server, session)
+    current_user_email = get_current_user_email(server, session)
+
+    if current_user_id == 1:
+        targetid = current_user_id + 1
+    else:
+        targetid = current_user_id - 1
+    basket = session.get("{}/{}".format(_get_basket_url(server), targetid))
+    if not basket.ok:
+        print(f"Error accessing basket {targetid} as {current_user_email}")
+    else:
+        print(
+            f"Successfully accessed another user's basket {targetid} as {current_user_email}"
+        )
 
 
 def check_for_data_leakage(url):

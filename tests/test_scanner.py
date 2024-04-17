@@ -28,10 +28,6 @@ def missing_authentication_test(urls):
     endpoints = [
         "/rest/user/whoami",  # Requires authentication: Ensures only logged-in users can access user identity info.
         "/api/Users",  # Admin-only access: Prevents non-admin users from listing user accounts.
-        "/rest/basket/1",  # Restricted access: Only accessible by the basket's owner or by an admin.
-        "/rest/basket/2",  # Restricted access: Only accessible by the basket's owner or by an admin.
-        "/api/BasketItems/1",  # Item-specific access: Requires user authentication, owner or admin rights for access.
-        "/api/BasketItems/2",  # Item-specific access: Requires user authentication, owner or admin rights for access.
         "/api/PrivacyRequests",  # Privacy requests handling: Should be secured to process data privacy requests.
         "/#/administration",  # Admin panel: Strictly protected to allow only administrators.
     ]
@@ -65,39 +61,26 @@ def weak_encryption_test():
     print("---------- TEST 3 COMPLETE ----------\n")
 
 
-def missing_authorization_test(base_url):
+def missing_authorization_test():
     print("---------- TEST 4: Starting scan for missing authorization... ----------\n")
-    user_credentials = {
-        "email": "user@example.com",  # Normal user
-        "password": "password123",
-    }
+    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    try:
+        admin_session, _ = login(os.getenv("HOST"), admin_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as admin: {e}")
+        return
 
-    # admin_credentials = {
-    #     "email": "admin@juice-sh.op",  # Admin user
-    #     "password": "admin123",
-    # }
+    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    try:
+        user_session, _ = login(host, user_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
 
-    # Login as normal user
-    proxies = {
-        "http": "http://127.0.0.1:8080",
-        "https": "http://127.0.0.1:8080",
-    }
-    user_session = requests.Session()
-    user_login_response = user_session.post(
-        f"{base_url}/rest/user/login", data=user_credentials, proxies=proxies
-    )
-    print(user_login_response)
+    access_another_user_basket(os.getenv("HOST"), user_session)
+    access_another_user_basket(os.getenv("HOST"), admin_session)
 
-    # Login as admin
-    # admin_session = requests.Session()
-    # admin_login_response = admin_session.post(
-    #     f"{base_url}/rest/user/login", data=admin_credentials
-    # )
-
-    admin_only_url = f"{base_url}/administration"
-    attempt_unauthorized_access(base_url, user_session, admin_only_url)
-    # attempt_unauthorized_access(base_url, admin_session, admin_only_url)
-    print("---------- TEST 4 COMPLETE ----------\n")
+    print("\n---------- TEST 4 COMPLETE ----------\n")
 
 
 def weak_authorization_test():

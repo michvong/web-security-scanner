@@ -96,4 +96,14 @@ def get_current_user_id(server, session):
     :param session: Session
     :return: ID as int
     """
-    return whoami(server, session).get("id")
+    return whoami(server, session).get("user", {}).get("id")
+
+
+def get_current_user_email(server, session):
+    """
+    Retrieve current user's email
+    :param server: juice shop URL
+    :param session: Session
+    :return: email as string
+    """
+    return whoami(server, session).get("user", {}).get("email")
