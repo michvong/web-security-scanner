@@ -85,7 +85,25 @@ def missing_authorization_test():
 
 def weak_authorization_test():
     print("---------- TEST 5: Starting scan for weak authorization... ----------\n")
+    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    try:
+        admin_session, _ = login(os.getenv("HOST"), admin_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as admin: {e}")
+        return
 
+    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    try:
+        user_session, _ = login(host, user_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
+
+    normal_user_id = 2
+    submit_feedback_as_another_user(host, admin_session, normal_user_id)
+
+    admin_user_id = 1
+    submit_feedback_as_another_user(host, user_session, admin_user_id)
     print("---------- TEST 5 COMPLETE ----------\n")
 
 

