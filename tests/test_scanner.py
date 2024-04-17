@@ -9,7 +9,7 @@ load_dotenv()
 host = os.getenv("HOST")
 
 
-def missing_authentication_test(urls):
+def missing_authentication_test():
     print("---------- TEST 1: Starting scan for missing authentication... ----------")
     admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
     try:
@@ -110,7 +110,7 @@ def weak_authorization_test():
 def sensitive_data_test(urls):
     test6_results = []
     print("---------- TEST 6: Starting scan for sensitive data... ----------\n")
-    for url, _ in urls:
+    for url in urls:
         test6_result = check_for_data_leakage(url)
         test6_results.append(test6_result)
 
