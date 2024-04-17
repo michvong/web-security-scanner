@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+host = os.getenv("HOST")
+
 
 def missing_authentication_test(urls):
     print("---------- TEST 1: Starting scan for missing authentication... ----------")
@@ -57,16 +59,9 @@ def weak_authentication_test():
     print("\n---------- TEST 2 COMPLETE ----------\n")
 
 
-def weak_encryption_test(urls):
-    test3_results = []
+def weak_encryption_test():
     print("---------- TEST 3: Starting scan for weak encryption... ----------\n")
-    for url, _ in urls:
-        test3_result = check_https(url)
-        test3_results.append(test3_result)
-        print(
-            f'{test3_result["status"]} (Protocol: {test3_result["protocol"]}): {test3_result["url"]}\n{test3_result["message"]}\n'
-        )
-    save_results("test3_results", test3_results)
+    check_https(host)
     print("---------- TEST 3 COMPLETE ----------\n")
 
 

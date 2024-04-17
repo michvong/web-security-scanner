@@ -9,9 +9,9 @@ def main():
 
     process_urls(urls)
 
-    missing_authentication_test(urls)
+    # missing_authentication_test(urls)
     # weak_authentication_test()
-    # weak_encryption_test(urls)
+    weak_encryption_test()
     # missing_authorization_test("http://localhost:3000/#")
     # weak_authorization_test()
     # sensitive_data_test(urls)

@@ -111,19 +111,12 @@ def attempt_unauthorized_access(base_url, session, restricted_url):
 def check_https(url):
     parsed_url = urlparse(url)
     if parsed_url.scheme == "https":
-        return {
-            "url": url,
-            "protocol": parsed_url.scheme,
-            "status": "SUCCESS",
-            "message": "Data is safely encrypted in transmissions.",
-        }
+        print(
+            url
+            + ": HTTP protocol is used, data is safely encrypted in transmissions.\n"
+        )
     else:
-        return {
-            "url": url,
-            "protocol": parsed_url.scheme,
-            "status": "ERROR",
-            "message": "Data is NOT safe.",
-        }
+        print(url + ": HTTPS protocol is not used, data is NOT safe.\n")
 
 
 def check_for_data_leakage(url):
