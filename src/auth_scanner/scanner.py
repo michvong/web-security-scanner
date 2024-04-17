@@ -1,5 +1,5 @@
-from src.util.authentication import *
-from src.util.products import *
+from src.owasp_juice_shop.authentication import *
+from src.owasp_juice_shop.util import *
 
 import requests
 import json

@@ -1,4 +1,4 @@
-from src.util.authentication import *
+from src.owasp_juice_shop.authentication import *
 
 
 def get_basket_url(server):

@@ -1,7 +1,7 @@
 from src.auth_scanner.scanner import *
 from src.auth_scanner.util import *
 from tests.test_scanner import *
-from src.util.authentication import create_user
+from src.owasp_juice_shop.authentication import create_user
 
 import os
 from dotenv import load_dotenv
