@@ -41,23 +41,17 @@ def login(server, payload, headers=None):
 
     response = session.post(f"{server}/rest/user/login", headers=headers, data=payload)
 
-    # Check if the login was successful
     if response.ok:
         try:
-            # Attempt to parse the JSON token
             token_data = response.json().get("authentication", {})
             token = token_data.get("token")
             if token:
-                session.cookies.set(
-                    "token", token, path="/"
-                )  # Ensure the path is correctly set
+                session.cookies.set("token", token, path="/")
                 session.headers.update({"Authorization": f"Bearer {token}"})
         except ValueError:
-            # Handle JSON decode error
             print(f"Failed to decode JSON from response: {response.text}")
             raise RuntimeError("Invalid JSON response received.")
     else:
-        # Handle unsuccessful login attempts
         print(
             f"Error logging in. Status: {response.status_code}, Content: {response.text}\n"
         )
