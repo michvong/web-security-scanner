@@ -12,8 +12,8 @@ def main():
     # weak_encryption_test()
     # missing_authorization_test()
     # weak_authorization_test()
-    sensitive_data_test(urls)
-    # uncontrolled_resources_tests(urls)
+    # sensitive_data_test(urls)
+    uncontrolled_resources_tests()
     # insufficient_audit_test()
     # insufficient_session_management_test()
 

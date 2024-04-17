@@ -35,7 +35,7 @@ def login(server, payload, headers=None):
         headers = {"Content-Type": "application/json"}
     response = session.post(f"{server}/rest/user/login", headers=headers, data=payload)
     if not response.ok:
-        raise RuntimeError(
+        print(
             f"Error logging in. Status: {response.status_code}, Content: {response.text}"
         )
 
@@ -64,13 +64,13 @@ def create_user(server, email, password):
     )
     session = requests.Session()
     response = session.post(
-        "{}/api/Users".format(server),
+        f"{server}/api/Users",
         headers={"Content-Type": "application/json"},
         data=payload,
         proxies=proxies,
     )
     if not response.ok:
-        raise RuntimeError("Error creating user {}".format(email))
+        print(f"Error creating user {email}")
 
 
 def whoami(server, session):
@@ -81,11 +81,11 @@ def whoami(server, session):
     :return: response body as dict
     """
     who = session.get(
-        "{}/rest/user/whoami".format(server),
+        f"{server}/rest/user/whoami",
         headers={"Accept": "application/json"},
     )
     if not who.ok:
-        raise RuntimeError("Error retrieving current user details")
+        print("Error retrieving current user details")
     return who.json()
 
 

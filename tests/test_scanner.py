@@ -121,21 +121,20 @@ def sensitive_data_test(urls):
             message_formatted = f"- {result['message']}"
 
         print(f'{result["status"]}: {result["url"]}\n{message_formatted}\n')
-    save_results("test6_results", test6_results)
     print("---------- TEST 6 COMPLETE ----------\n")
 
 
-def uncontrolled_resources_tests(urls):
-    test7_results = []
+def uncontrolled_resources_tests():
     print("---------- TEST 7: Starting uncontrolled resources check... ----------\n")
+    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    try:
+        user_session, _ = login(host, user_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
+
     test_file_path = "data/trash.txt"
-    for url, _ in urls:
-        test7_result = test_file_upload(url, test_file_path)
-        test7_results.append(test7_result)
-        print(
-            f'Status {test7_result["status_code"]}: {test7_result["url"]}\n{test7_result["message"]}\n'
-        )
-    save_results("test7_results", test7_results)
+    test_file_upload(host, user_session, test_file_path)
     print("---------- TEST 7 COMPLETE ----------\n")
 
 
