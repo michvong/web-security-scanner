@@ -44,21 +44,23 @@ def test_endpoint_without_auth(server, endpoint):
         )
 
 
-def test_rate_limiting(base_url, email, password):
+def test_rate_limiting(server, email, password):
     """
     Test for rate limiting by trying to login multiple times.
     """
-    login_credentials = {"email": email, "password": password}
-    login_payload = json.dumps(login_credentials)
+    login_payload = json.dumps({"email": email, "password": password})
+
     for i in range(10):
         try:
-            authenticated_session, response = login(base_url, login_payload)
-            print(f"Attempt {i+1}, Status: {response.status_code}")
+            print(f"Attempt {i+1}:")
+            _, response = login(server, login_payload)
+
         except RuntimeError as e:
-            print(f"Attempt {i+1}, Login failed: {e}")
+            # print(f"Attempt {i+1}, Login failed: {e}")
             if "429" in str(e):
                 print("Rate limiting detected.")
                 return
+
     print("Rate limiting not detected.\n")
 
 
@@ -83,6 +85,7 @@ def test_weak_password_support(base_url):
         try:
             create_user(base_url, email, password)
             results[password] = "Weak password accepted, weak authentication detected."
+
         except RuntimeError as e:
             results[password] = (
                 f"Weak password rejected, strong authentication measures in place. {str(e)}"
@@ -117,6 +120,7 @@ def access_another_user_basket(server, session):
     else:
         targetid = current_user_id - 1
     basket = session.get(f"{get_basket_url(server)}/{targetid}")
+
     if not basket.ok:
         print(f"Error accessing basket {targetid} as {current_user_email}")
     else:
@@ -131,6 +135,7 @@ def submit_feedback_as_another_user(server, session, user_id):
         "comment": "I'm submitting evil feedback!",
         "UserId": user_id,
     }
+
     print(
         f"Submitting feedback from user ID {current_user_id} as user ID {user_id}..."
     ),
@@ -168,6 +173,7 @@ def check_for_data_leakage(url):
                 "status": "OK",
                 "message": "No obvious data leakage detected.",
             }
+
     except requests.RequestException as e:
         return {
             "url": url,
@@ -188,8 +194,10 @@ def test_file_upload(server, session, filepath):
         files = {"file": ("whatever", infile, "application/json")}
         print("Uploading 150kb file without a file extension..."),
         upload = session.post(f"{server}/file-upload", files=files)
+
         if not upload.ok:
             print("Error uploading file.\n")
+
         print("Successfully uploaded an evil file!\n")
 
 
@@ -210,37 +218,19 @@ def analyze_logs(log_file_path, search_terms):
     return matches
 
 
-def check_session_management(url):
-    login_url = f"{url}/rest/user/login"
-    logout_url = f"{url}/rest/user/logout"
+def check_session_management(session):
+    try:
+        cookies = session.cookies
+        for cookie in cookies:
+            print(f"Analyzing Cookie {cookie.name} attributes...")
+            if "Secure" in cookie._rest:
+                print("Cookie is Secure.")
+            else:
+                print("WARNING: Cookie is not Secure.")
 
-    user_details = {"email": "admin@juice-sh.op", "password": "admin123"}
-
-    with requests.Session() as session:
-        response = session.post(login_url, json=user_details)
-
-        if response.status_code == 200:
-            print("Login successful.")
-            cookies = session.cookies
-            for cookie in cookies:
-                print(f"Cookie {cookie.name} attributes:")
-                attributes = []
-                if "Secure" in cookie._rest:
-                    attributes.append("Secure")
-                if "HttpOnly" in cookie._rest:
-                    attributes.append("HttpOnly")
-                print(", ".join(attributes) or "No Secure/HttpOnly attributes set")
-
-        else:
-            print("Failed to login.")
-
-        response = session.get(logout_url)
-        if response.status_code == 200:
-            print("Logout successful.")
-
-        # Try to access a protected resource after logging out
-        response = session.get(f"{url}/api/ProtectedResource")
-        if response.status_code == 401:
-            print("Session properly invalidated after logout.")
-        else:
-            print("Session may not be properly invalidated after logout.")
+            if "HttpOnly" in cookie._rest:
+                print("Cookie is HttpOnly.")
+            else:
+                print("WARNING: Cookie is not HttpOnly")
+    except RuntimeError as e:
+        print(e)

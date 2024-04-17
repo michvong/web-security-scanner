@@ -7,18 +7,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 host = os.getenv("HOST")
+admin_email = os.getenv("ADMIN_EMAIL")
+admin_password = os.getenv("ADMIN_PASSWORD")
+user_email = os.getenv("USER_EMAIL")
+user_password = os.getenv("USER_PASSWORD")
 
 
 def missing_authentication_test():
     print("---------- TEST 1: Starting scan for missing authentication... ----------")
-    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    admin_payload = json.dumps({"email": admin_email, "password": admin_password})
     try:
         admin_session, _ = login(os.getenv("HOST"), admin_payload)
     except RuntimeError as e:
         print(f"Failed to login as admin: {e}")
         return
 
-    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    user_payload = json.dumps({"email": user_email, "password": user_password})
     try:
         user_session, _ = login(os.getenv("HOST"), user_payload)
     except RuntimeError as e:
@@ -49,7 +53,7 @@ def missing_authentication_test():
 def weak_authentication_test():
     print("---------- TEST 2: Starting scan for weak authentication... ----------\n")
     test_rate_limiting(
-        os.getenv("HOST"), "admin@juice-sh.op", "12345"
+        os.getenv("HOST"), admin_email, "12345"
     )  # Login with incorrect credentials
     test_weak_password_support(os.getenv("HOST"))
     print("\n---------- TEST 2 COMPLETE ----------\n")
@@ -63,14 +67,14 @@ def weak_encryption_test():
 
 def missing_authorization_test():
     print("---------- TEST 4: Starting scan for missing authorization... ----------\n")
-    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    admin_payload = json.dumps({"email": admin_email, "password": admin_password})
     try:
         admin_session, _ = login(os.getenv("HOST"), admin_payload)
     except RuntimeError as e:
         print(f"Failed to login as admin: {e}")
         return
 
-    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    user_payload = json.dumps({"email": user_email, "password": user_password})
     try:
         user_session, _ = login(host, user_payload)
     except RuntimeError as e:
@@ -85,14 +89,14 @@ def missing_authorization_test():
 
 def weak_authorization_test():
     print("---------- TEST 5: Starting scan for weak authorization... ----------\n")
-    admin_payload = json.dumps({"email": "admin@juice-sh.op", "password": "admin123"})
+    admin_payload = json.dumps({"email": admin_email, "password": admin_password})
     try:
         admin_session, _ = login(os.getenv("HOST"), admin_payload)
     except RuntimeError as e:
         print(f"Failed to login as admin: {e}")
         return
 
-    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    user_payload = json.dumps({"email": user_email, "password": user_password})
     try:
         user_session, _ = login(host, user_payload)
     except RuntimeError as e:
@@ -126,7 +130,7 @@ def sensitive_data_test(urls):
 
 def uncontrolled_resources_tests():
     print("---------- TEST 7: Starting uncontrolled resources check... ----------\n")
-    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    user_payload = json.dumps({"email": user_email, "password": user_password})
     try:
         user_session, _ = login(host, user_payload)
     except RuntimeError as e:
@@ -141,7 +145,7 @@ def uncontrolled_resources_tests():
 def insufficient_audit_test():
     test8_results = []
     print("---------- TEST 8: Starting scan for insufficient auditing... ----------\n")
-    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    user_payload = json.dumps({"email": user_email, "password": user_password})
     try:
         user_session, _ = login(host, user_payload)
     except RuntimeError as e:
@@ -172,8 +176,13 @@ def insufficient_audit_test():
 
 def insufficient_session_management_test():
     print(
-        "---------- TEST 9: Starting scan for insufficient session management... ----------"
+        "---------- TEST 9: Starting scan for insufficient session management... ----------\n"
     )
-    # save_results("test9_results", test9_results)
-    check_session_management("https://mv-juice-shop-4e9a0f3a9844.herokuapp.com/")
-    print("---------- TEST 9 COMPLETE ----------\n")
+    admin_payload = json.dumps({"email": admin_email, "password": admin_password})
+    try:
+        user_session, _ = login(host, admin_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
+    check_session_management(user_session)
+    print("\n---------- TEST 9 COMPLETE ----------\n")
