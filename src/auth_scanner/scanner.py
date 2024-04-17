@@ -1,4 +1,5 @@
 from src.util.authentication import *
+from src.util.products import *
 
 import requests
 import json
@@ -102,10 +103,6 @@ def check_https(url):
         print(url + ": HTTPS protocol is not used, data is NOT safe.\n")
 
 
-def _get_basket_url(server):
-    return "{}/rest/basket".format(server)
-
-
 def access_another_user_basket(server, session):
     """
     If we're admin(ID 1), open basket 2. Anybody else, open the ID below us.
@@ -119,7 +116,7 @@ def access_another_user_basket(server, session):
         targetid = current_user_id + 1
     else:
         targetid = current_user_id - 1
-    basket = session.get("{}/{}".format(_get_basket_url(server), targetid))
+    basket = session.get("{}/{}".format(get_basket_url(server), targetid))
     if not basket.ok:
         print(f"Error accessing basket {targetid} as {current_user_email}")
     else:
