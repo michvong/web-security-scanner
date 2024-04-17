@@ -1,5 +1,4 @@
-https://mv-juice-shop-4e9a0f3a9844.herokuapp.com/#,False
-http://localhost:3000/#,False
-http://localhost:3000/#/api/Products,False
-http://localhost:3000/#/api/BasketItems,True
-http://localhost:3000/#/administration,True
+https://mv-juice-shop-4e9a0f3a9844.herokuapp.com/#
+http://localhost:3000/#
+https://www.sfu.ca/
+http://www.baidu.com/
