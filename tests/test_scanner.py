@@ -140,8 +140,18 @@ def uncontrolled_resources_tests():
 
 def insufficient_audit_test():
     test8_results = []
-    print("---------- TEST 8: Starting scan for insufficient auditing... ----------")
-    log_file = "data/mock_log_file.log"
+    print("---------- TEST 8: Starting scan for insufficient auditing... ----------\n")
+    user_payload = json.dumps({"email": "test-12345@example.com", "password": "12345"})
+    try:
+        user_session, _ = login(host, user_payload)
+    except RuntimeError as e:
+        print(f"Failed to login as user: {e}")
+        return
+    print("- Attempting to access support logs as normal user... -")
+    test_endpoint_with_session(os.getenv("HOST"), "/support/logs", user_session)
+
+    print("\n- Analyzing log file... -")
+    log_file = os.getenv("LOG_FILE")
     search_categories = {
         "Authentication": ["login", "logout"],
         "Authorization": ["access", "unauthorized", "authorized"],
@@ -152,13 +162,12 @@ def insufficient_audit_test():
         test8_results = analyze_logs(log_file, terms)
 
         if test8_results:
-            print(f"\nFound the following entries related to {category}:")
+            print(f"Found the following entries related to {category}:")
             for result in test8_results:
                 print(result, end="")
         else:
-            print("WARNING: No relevant log entries found for this category.")
-    save_results("test8_results", test8_results)
-    print("---------- TEST 8 COMPLETE ----------\n")
+            print(f"\nWARNING: No relevant log entries found for category: {category}.")
+    print("\n---------- TEST 8 COMPLETE ----------\n")
 
 
 def insufficient_session_management_test():
