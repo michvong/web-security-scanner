@@ -1,4 +1,0 @@
-https://mv-juice-shop-4e9a0f3a9844.herokuapp.com/#
-http://localhost:3000/#
-https://www.sfu.ca/
-http://www.baidu.com/
