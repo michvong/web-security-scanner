@@ -23,4 +23,6 @@ USER_PASSWORD=testing
 
 2. Under `data/urls.txt`, enter a list of URLs to test out.
 
-3. Run the program using `python3 -m main` in the root directory.
+3. Install the required dependencies using `pip install -r requirements.txt`
+
+4. Run the program using `python3 -m main` in the root directory.
