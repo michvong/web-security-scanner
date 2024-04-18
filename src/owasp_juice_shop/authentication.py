@@ -11,6 +11,7 @@ proxies = {
 }
 
 
+# Modified from https://github.com/incognitjoe/juice-shop-solver.
 def login_as_admin(server):
     """
     Log in legitimately as an admin.
